@@ -20,8 +20,20 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         if isinstance(value, Secret):
             return value
         #@todo: perform some validations here
-        return Secret.from_ciphertext(value.decode('hex'))
+
+        if value:
+            #print str(value)
+            [salt, ciphertext] = value.split('$')
+            return Secret.from_ciphertext(ciphertext.decode('hex'), salt)
 
     def get_prep_value(self, value):
-        return value.get_ciphertext().encode('hex')
+        ciphertext = value.get_ciphertext().encode('hex')
+        salt = value.get_salt()
+        
+        try:
+            db_value = str(salt) + '$' + str(ciphertext)
+        except e:
+            pass
+
+        return str(salt) + '$' + str(ciphertext)
         
