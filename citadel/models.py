@@ -40,7 +40,19 @@ class Secret(object):
     @classmethod
     def from_ciphertext(cls, ciphertext, salt):
         return cls(ciphertext=ciphertext, salt=salt)    
+    
+    def recrypt(self, old_pw, new_pw):
+        plaintext = self.get_plaintext(old_pw)
+#         self = Secret.from_plaintext(pt, new_pw)
+        encoded = self._encode(new_pw)
         
+        #self.salt = 
+        [alg, iterations, self.salt, hash]  = encoded.split('$')
+        
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
+        self.ciphertext = (iv + cipher.encrypt(plaintext))
+       
     def get_salt(self):
         return self.salt
 
