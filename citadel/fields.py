@@ -37,3 +37,7 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
 
         return str(salt) + '$' + str(ciphertext)
         
+    def value_to_string(self, obj): 
+        value = self._get_val_from_obj(obj)
+        return self.get_prep_value(value)
+        
