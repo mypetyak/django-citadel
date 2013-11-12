@@ -14,7 +14,7 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         super(SecretField, self).__init__(*args, **kwargs)    
     
     def db_type(self, connection):
-        return 'blob'
+        return 'bytea'
     
     def to_python(self, value):
         if isinstance(value, Secret):
