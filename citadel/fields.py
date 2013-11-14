@@ -22,8 +22,9 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         #@todo: perform some validations here
 
         if value:
-            #print str(value)
-            [salt, ciphertext] = value.split('$')
+	    # we need to stringify 'value' in case we're handed
+	    # a buffer object, as in the case of postgresql
+            [salt, ciphertext] = str(value).split('$')
             return Secret.from_ciphertext(ciphertext.decode('hex'), salt)
 
     def get_prep_value(self, value):
