@@ -5,8 +5,8 @@ when you run "manage.py test".
 Unit tests for the Citadel application
 """
 
-from apps.citadel.fields import SecretField
-from apps.citadel.models import Secret
+from citadel.fields import SecretField
+from citadel.models import Secret
 from django.test import TestCase
 
 class EncryptionTestCase(TestCase):
@@ -20,9 +20,14 @@ class EncryptionTestCase(TestCase):
         
         sf = SecretField()
         
-        # reconstruct python object from ciphertext
-        s2 = sf.to_python(s1.get_ciphertext())
-        self.assertEqual(s2.get_plaintext(key), s1.get_plaintext(key))        
+        # simulate save to DB
+        db_value = sf.get_prep_value(s1)
+
+        # simulate retrieval from DB
+        py_obj = sf.to_python(db_value)
+
+        self.assertEqual(py_obj.get_plaintext(key), s1.get_plaintext(key))
+        self.assertEqual(py_obj.get_plaintext(key), plaintext)
         
 
 
