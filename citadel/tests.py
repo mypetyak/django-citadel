@@ -27,6 +27,7 @@ class EncryptionTestCase(TestCase):
         py_obj = sf.to_python(db_value)
 
         self.assertEqual(py_obj.get_plaintext(key), s1.get_plaintext(key))
+        self.assertEqual(py_obj.get_plaintext(key), plaintext)
         
 
 
