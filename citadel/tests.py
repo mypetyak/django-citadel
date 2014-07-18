@@ -1,7 +1,4 @@
 """
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
-
 Unit tests for the Citadel application
 """
 
@@ -11,9 +8,12 @@ from django.test import TestCase
 
 class EncryptionTestCase(TestCase):
 
-    def test_secretmodel(self):                          
+    def test_secretmodel(self):
+        """
+        Confirm that basic Secret and SecretField behavior
+        """
         key = 'abcdefabcdefabcd'
-        plaintext = "Study hard what interests you the most in the most undisciplined, irreverent and original manner possible."
+        plaintext = "We build too many walls and not enough bridges."
         
         # create python object from plaintext
         s1 = Secret.from_plaintext(plaintext, 'abcdefabcdefabcd')
@@ -28,6 +28,3 @@ class EncryptionTestCase(TestCase):
 
         self.assertEqual(py_obj.get_plaintext(key), s1.get_plaintext(key))
         self.assertEqual(py_obj.get_plaintext(key), plaintext)
-        
-
-

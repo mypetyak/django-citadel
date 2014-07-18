@@ -19,6 +19,8 @@ def main():
             'django.contrib.contenttypes',
             'django.contrib.admin',
             'django.contrib.sessions',
+            'citadel',
+            'example',
         ],
         # Django replaces this, but it still wants it. *shrugs*
         # DATABASE_ENGINE='django.db.backends.sqlite3',
@@ -45,7 +47,7 @@ def main():
         TEMPLATE_DEBUG=True,
     )
 
-    apps = []
+    apps = ['citadel', 'example']
     from django.core.management import call_command
     from django.test.utils import get_runner
 
