@@ -31,9 +31,9 @@ def main():
         DATABASES = {
             'default': {
                 'ENGINE':   'django.db.backends.postgresql_psycopg2',
-                'NAME':     'belgrade',
-                'USER':     'belgrade',
-                'PASSWORD': '#4Ug4646EGh1YxG$%ppc',
+                'NAME':     'citadel',
+                'USER':     'postgres',
+                'PASSWORD': '',
                 'HOST':     'localhost',
                 'PORT':     '',
             }

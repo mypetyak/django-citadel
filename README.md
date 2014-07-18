@@ -1,5 +1,7 @@
 django-citadel
 ==============
+[![Build Status](https://travis-ci.org/mypetyak/django-citadel.svg?branch=master)](https://travis-ci.org/mypetyak/django-citadel)
+
 This is a small Django application that provides a field type that stores data under AES encryption. It is useful
 for the Django developer that needs to store sensitive data in an untrusted location (such as a database that could
 be compromised, a third-party server, an external message queue, etc). It is an application-level alternative to

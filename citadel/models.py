@@ -1,9 +1,13 @@
 from Crypto import Random
 from Crypto.Cipher import AES
-from south.modelsinspector import add_introspection_rules
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
-add_introspection_rules([], ["^citadel\.fields\.SecretField"])
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^citadel\.fields\.SecretField"])
+except ImportError:
+    # South isn't used
+    pass
 
 class Secret(object):
     def __init__(self, plaintext=None, password=None, ciphertext=None, salt=None):
