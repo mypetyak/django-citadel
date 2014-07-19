@@ -6,11 +6,10 @@ from setuptools import find_packages
 setup(
     name='django-citadel',
     version='0.1.3',
-    description='Django Citadel - providing an encrypted ModelField',
+    description='A Django app that provides an encrypted Model and ModelField',
     author='Christopher Bunn',
-    author_email='',
-    url='',
-    packages=find_packages(),
+    url='https://github.com/mypetyak/django-citadel',
+    packages=['citadel'],
     install_requires = [
         'pycrypto',
     ],
