@@ -2,9 +2,9 @@ django-citadel
 ==============
 [![Build Status](https://travis-ci.org/mypetyak/django-citadel.svg?branch=master)](https://travis-ci.org/mypetyak/django-citadel)
 
-This is a small Django application that provides a field type that stores data under AES encryption. It is useful
-for the Django developer that needs to store sensitive data in an untrusted location (such as a database that could
-be compromised, a third-party server, an external message queue, etc). It is an application-level alternative to
+This Django application provides a field type that stores data under AES encryption at rest. It is useful
+for the Django developer that needs to store sensitive data in an untrusted location (a database that could
+be compromised, a third-party external message queue, etc). It is an application-level alternative to
 database-level encryption, such as PostgreSQL's `pgcrypto` module.
 
 ##Features:
@@ -12,8 +12,8 @@ database-level encryption, such as PostgreSQL's `pgcrypto` module.
 - Password hashing is performed using PBKDF2 hash function in order to combat dictionary attacks
 - Hydrated fields remain encrypted in memory until explicitly decrypted, limiting unnecessary performance
 overhead and plaintext leakage
-- Each SecretField can be decrypted individually
-- Each secret can have its own unique key, ideal for encryption using user-provided key
+- Each SecretField can be decrypted individually, providing granular control
+- Each secret can be encrypted with a unique unique key, ideal for encryption using user-provided key
 
 ##Requirements:
 - Encryption relies on PyCrypto toolkit (`pip install pycrypto`)
@@ -55,4 +55,10 @@ bt = BuriedTreasure.objects.get(user=blackbeard)
 jackpot_directions = bt.location.get_plaintext(password=password)
 ```
 
-Note that `jackpot_directions` now contains the text "30 meters north of the tall coconut tree"
+Printing `jackpot_directions` now outputs the text "30 meters north of the tall coconut tree"
+
+##Installation:
+The app is available through Pypi:
+`pip install django-citadel`
+
+Add support to your Django project by adding `citadel` to your list of `INSTALLED_APPS`
