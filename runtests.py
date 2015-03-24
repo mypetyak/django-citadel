@@ -44,8 +44,8 @@ def main():
     )
 
     if os.getenv('BUILD_ON_TRAVIS', None):
-        DATABASES['default']['USER'] = 'postgres'
-        DATABASES['default']['PASSWORD'] = ''
+        settings.DATABASES['default']['USER'] = 'postgres'
+        settings.DATABASES['default']['PASSWORD'] = ''
 
     apps = ['citadel', 'example']
     from django.core.management import call_command

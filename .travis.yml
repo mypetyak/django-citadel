@@ -15,4 +15,4 @@ install:
 script:
   - python setup.py test
 before_script:
-  - psql -c 'create database citadel;' -U postgres
+  - psql -c 'create database citadel_test;' -U postgres
