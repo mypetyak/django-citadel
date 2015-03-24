@@ -18,3 +18,6 @@ If you're using Vagrant, ssh into your virtual machine, enter your python virtua
     $ vagrant ssh
     $ source /vagrant/env/bin/activate
     $ python /vagrant/runtests.py
+    
+##Continuous Integration:
+All Django test cases are automatically tested upon push to github by Travis CI.  Please ensure your commit passes testing prior to issuing a pull request.

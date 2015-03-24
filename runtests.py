@@ -1,10 +1,6 @@
 #!/usr/bin/env python
+import os
 import sys
-# from os.path import dirname, abspath
-# # from optparse import OptionParser
-#
-# parent = dirname(abspath(__file__))
-# sys.path.insert(0, parent)
 
 from django.conf import settings
 
@@ -46,6 +42,10 @@ def main():
         DEBUG=True,
         TEMPLATE_DEBUG=True,
     )
+
+    if os.getenv('BUILD_ON_TRAVIS', None):
+        DATABASES['default']['USER'] = 'postgres'
+        DATABASES['default']['PASSWORD'] = ''
 
     apps = ['citadel', 'example']
     from django.core.management import call_command

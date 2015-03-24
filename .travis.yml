@@ -3,8 +3,12 @@ python:
   - "2.7"
   - "2.6"
 env:
-  - DJANGO=1.5.5
-  - DJANGO=1.6.2
+  matrix:
+    - DJANGO=1.5.5
+    - DJANGO=1.6.2
+  global:
+    # we use BUILD_ON_TRAVIS to test for environment
+    - BUILD_ON_TRAVIS=true
 install:
   - pip install -q Django==$DJANGO
   - pip install -q pycrypto psycopg2
