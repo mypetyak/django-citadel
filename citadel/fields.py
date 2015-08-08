@@ -28,6 +28,8 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         :param value: python attribute
         :return: format for use in database query
         """
+        if not value:
+            return None
         ciphertext = value.get_ciphertext().encode('hex')
         salt = value.get_salt()
 

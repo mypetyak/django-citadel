@@ -6,6 +6,7 @@ env:
   matrix:
     - DJANGO=1.5.5
     - DJANGO=1.6.2
+    - DJANGO=1.7.1
   global:
     # we use BUILD_ON_TRAVIS to test for environment
     - BUILD_ON_TRAVIS=true

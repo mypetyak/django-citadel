@@ -33,8 +33,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       puppet.manifest_file = "manifest.pp"
     end
 
-    #local.vm.provision :shell, :path => "vagrant_bootstrap.sh"
-
     # The url from where the 'config.vm.box' box will be fetched if it
     # doesn't already exist on the user's system.
     local.vm.box_url = "http://files.vagrantup.com/precise64.box"
