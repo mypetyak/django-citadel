@@ -17,6 +17,7 @@ If you're using Vagrant, ssh into your virtual machine, enter your python virtua
 
     $ vagrant ssh
     $ source /vagrant/env/bin/activate
+    $ pip install -r /vagrant/requirements.txt
     $ python /vagrant/runtests.py
     
 ##Continuous Integration:

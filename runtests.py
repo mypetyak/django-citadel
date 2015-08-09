@@ -5,7 +5,7 @@ import sys
 from django.conf import settings
 
 
-def main():
+if __name__ == '__main__':
     # Dynamically configure the Django settings with the minimum necessary to
     # get Django running tests.
     KEY_LOCS = {}
@@ -50,6 +50,11 @@ def main():
     apps = ['citadel', 'example']
     from django.core.management import call_command
     from django.test.utils import get_runner
+    from django import VERSION
+
+    if VERSION[1] >=7:
+        from django import setup
+        setup()
 
     DjangoTestRunner = get_runner(settings)
 
@@ -66,6 +71,3 @@ def main():
 
     failures = TestRunner(verbosity=2, interactive=True).run_tests(apps)
     sys.exit(failures)
-
-if __name__ == '__main__':
-    main()

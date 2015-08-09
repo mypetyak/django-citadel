@@ -13,5 +13,5 @@ setup(
     install_requires = [
         'pycrypto',
     ],
-    test_suite="runtests.main"
+    test_suite="runtests"
 )
