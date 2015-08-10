@@ -4,6 +4,8 @@ from django.utils.six import with_metaclass
 
      
 class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
+    LEGACY_PBKDF2_WORK_FACTOR = 12000 # used circa Django 1.6
+
     def __init__(self, *args, **kwargs):
         super(SecretField, self).__init__(*args, **kwargs)    
     
@@ -19,8 +21,14 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         if value:
 	    # we need to stringify 'value' in case we're handed
 	    # a buffer object, as in the case of postgresql
-            [salt, ciphertext] = str(value).split('$')
-            return Secret.from_ciphertext(ciphertext.decode('hex'), salt)
+            try:
+                [salt, work_factor, ciphertext] = str(value).split('$')
+            except ValueError:
+                # legacy support for prior citadel versions
+                [salt, ciphertext] = str(value).split('$')
+                work_factor = LEGACY_PBKDF2_WORK_FACTOR
+
+            return Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor)
 
     def get_prep_value(self, value):
         """
@@ -33,7 +41,7 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         ciphertext = value.get_ciphertext().encode('hex')
         salt = value.get_salt()
 
-        return str(salt) + '$' + str(ciphertext)
+        return str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext)
         
     def value_to_string(self, obj): 
         value = self._get_val_from_obj(obj)

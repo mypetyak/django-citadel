@@ -10,13 +10,14 @@ except ImportError:
     pass
 
 class Secret(object):
-    def __init__(self, plaintext=None, password=None, ciphertext=None, salt=None):
+    def __init__(self, plaintext=None, password=None, ciphertext=None, salt=None, work_factor=None):
         if(plaintext and password):
             # Secret begins life unencrypted, keep it that way
             self.plaintext = plaintext
             encoded = self._encode(password)
 
             [alg, iterations, self.salt, hash]  = encoded.split('$')
+            self.work_factor = iterations
 
             # generate a unique initialization vector
             iv = Random.new().read(AES.block_size)
@@ -25,15 +26,16 @@ class Secret(object):
             # store ciphertext alongside plaintext
             self.ciphertext = (iv + cipher.encrypt(plaintext))
 
-        elif(ciphertext and salt):
+        elif(ciphertext and salt and work_factor):
             # Secret begins life encrypted, keep it that way
             self.salt = salt
             self.ciphertext = ciphertext
+            self.work_factor = work_factor
 
         else:
             raise ValueError("Insufficient arguments to initialize Secret")
 
-    def _encode(self, password, salt=None):
+    def _encode(self, password, salt=None, work_factor=None):
         """
         Generate hash using PBKDF2 function.
 
@@ -41,7 +43,11 @@ class Secret(object):
         :param salt: AES salt. If not provided, one is generated
         :return: string with [alg, iterations, salt, hash] separated by '$'
         """
-        hasher = PBKDF2PasswordHasher()
+        if work_factor:
+            hasher = PBKDF2PasswordHasher(iterations=self.work_factor)
+        else:
+            # if work_factor isn't specified, use Django's default value
+            hasher = PBKDF2PasswordHasher()
         if not salt:
             salt = hasher.salt()
             self.salt = salt
@@ -63,7 +69,7 @@ class Secret(object):
         return cls(plaintext=plaintext, password=password)
     
     @classmethod
-    def from_ciphertext(cls, ciphertext, salt):
+    def from_ciphertext(cls, ciphertext, salt, work_factor):
         """
         Generate a Secret object from ciphertext and salt
 
@@ -71,7 +77,7 @@ class Secret(object):
         :param salt: AES salt value
         :return: Secret object (encrypted)
         """
-        return cls(ciphertext=ciphertext, salt=salt)    
+        return cls(ciphertext=ciphertext, salt=salt, work_factor=work_factor)    
     
     def recrypt(self, old_pw, new_pw):
         """
@@ -97,6 +103,14 @@ class Secret(object):
         :return: AES salt
         """
         return self.salt
+    
+    def get_work_factor(self):
+        """
+        Return PBKDF2 hash work factor
+
+        :return: PBKDF2 work factor
+        """
+        return self.work_factor
 
     def get_ciphertext(self):
         """
@@ -127,4 +141,3 @@ class Secret(object):
             
                 self.plaintext = cipher.decrypt(self.ciphertext[AES.block_size:])
                 return self.plaintext
-        
