@@ -4,6 +4,9 @@ from django.utils.six import with_metaclass
 
      
 class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
+
+    description = "An encrypted-at-rest value"
+
     def __init__(self, *args, **kwargs):
         super(SecretField, self).__init__(*args, **kwargs)    
     
