@@ -1,11 +1,9 @@
-from citadel.models import Secret
+from citadel.types import Secret
 from django.db import models
 from django.utils.six import with_metaclass
 
      
 class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
-    LEGACY_PBKDF2_WORK_FACTOR = 12000 # used circa Django 1.6
-
     def __init__(self, *args, **kwargs):
         super(SecretField, self).__init__(*args, **kwargs)    
     
@@ -13,22 +11,25 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         # @TODO: add test for database type, return 'blob' if MySQL
         return 'bytea'
     
-    def to_python(self, value):
-        if isinstance(value, Secret):
+    def from_db_value(self, value, expression, connection, context):
+        """
+        Convert a value as returned by the database to a Python object.
+        """
+        if value is None:
             return value
-        #@todo: perform some validations here
-
-        if value:
-	    # we need to stringify 'value' in case we're handed
-	    # a buffer object, as in the case of postgresql
+        else:
+            work_factor = None
+            # we need to stringify 'value' in case we're handed
+            # a buffer object, as in the case of postgresql
             try:
                 [salt, work_factor, ciphertext] = str(value).split('$')
+                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor)
             except ValueError:
-                # legacy support for prior citadel versions
+                # maintain support for Citadel versions <= 0.2
                 [salt, ciphertext] = str(value).split('$')
-                work_factor = LEGACY_PBKDF2_WORK_FACTOR
+                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt)
 
-            return Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor)
+            return secret
 
     def get_prep_value(self, value):
         """
@@ -41,9 +42,9 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         ciphertext = value.get_ciphertext().encode('hex')
         salt = value.get_salt()
 
-        return str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext)
+        prep = str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext)
+        return prep
         
     def value_to_string(self, obj): 
         value = self._get_val_from_obj(obj)
         return self.get_prep_value(value)
-        

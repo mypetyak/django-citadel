@@ -1,6 +1,6 @@
-from Crypto import Random
-from Crypto.Cipher import AES
-from django.contrib.auth.hashers import PBKDF2PasswordHasher
+from django.db import models
+from fields import SecretField
+from types import Secret
 
 try:
     from south.modelsinspector import add_introspection_rules
@@ -9,135 +9,27 @@ except ImportError:
     # South isn't used
     pass
 
-class Secret(object):
-    def __init__(self, plaintext=None, password=None, ciphertext=None, salt=None, work_factor=None):
-        if(plaintext and password):
-            # Secret begins life unencrypted, keep it that way
-            self.plaintext = plaintext
-            encoded = self._encode(password)
 
-            [alg, iterations, self.salt, hash]  = encoded.split('$')
-            self.work_factor = iterations
-
-            # generate a unique initialization vector
-            iv = Random.new().read(AES.block_size)
-            cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
-
-            # store ciphertext alongside plaintext
-            self.ciphertext = (iv + cipher.encrypt(plaintext))
-
-        elif(ciphertext and salt and work_factor):
-            # Secret begins life encrypted, keep it that way
-            self.salt = salt
-            self.ciphertext = ciphertext
-            self.work_factor = work_factor
-
-        else:
-            raise ValueError("Insufficient arguments to initialize Secret")
-
-    def _encode(self, password, salt=None, work_factor=None):
-        """
-        Generate hash using PBKDF2 function.
-
-        :param password: text password
-        :param salt: AES salt. If not provided, one is generated
-        :return: string with [alg, iterations, salt, hash] separated by '$'
-        """
-        if work_factor:
-            hasher = PBKDF2PasswordHasher(iterations=self.work_factor)
-        else:
-            # if work_factor isn't specified, use Django's default value
-            hasher = PBKDF2PasswordHasher()
-        if not salt:
-            salt = hasher.salt()
-            self.salt = salt
-        encoded = hasher.encode(password, salt)
-        return encoded
-
-    @classmethod
-    def from_plaintext(cls, plaintext, password):
-        """
-        Generate a Secret object from plaintext and password.
-
-        Note that password is not encryption key, but is used
-        to generate a key.
-
-        :param plaintext: free text secret to encrypt
-        :param password: free text password used to generate encryption key
-        :return: Secret object (unencrypted)
-        """
-        return cls(plaintext=plaintext, password=password)
-    
-    @classmethod
-    def from_ciphertext(cls, ciphertext, salt, work_factor):
-        """
-        Generate a Secret object from ciphertext and salt
-
-        :param ciphertext: initialization vector + encrypted plaintext
-        :param salt: AES salt value
-        :return: Secret object (encrypted)
-        """
-        return cls(ciphertext=ciphertext, salt=salt, work_factor=work_factor)    
-    
-    def recrypt(self, old_pw, new_pw):
-        """
-        Change the Secret password
-
-        :param old_pw: current password
-        :param new_pw: desired password
-        :return: None
-        """
-        plaintext = self.get_plaintext(old_pw)
-        encoded = self._encode(new_pw)
-
-        [alg, iterations, self.salt, hash]  = encoded.split('$')
-        
-        iv = Random.new().read(AES.block_size)
-        cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
-        self.ciphertext = (iv + cipher.encrypt(plaintext))
-       
-    def get_salt(self):
-        """
-        Return AES encryption salt
-
-        :return: AES salt
-        """
-        return self.salt
-    
-    def get_work_factor(self):
-        """
-        Return PBKDF2 hash work factor
-
-        :return: PBKDF2 work factor
-        """
-        return self.work_factor
-
-    def get_ciphertext(self):
-        """
-        Return IV concatenated with encrypted plaintext
-
-        :return: initialization vector + encrypted plaintext
-        """
-        return self.ciphertext
-        
-    def get_plaintext(self, password=None):
-        """
-        Return the secret in plaintext.
-
-        :param password: Password to try in decryption
-        :return: string plaintext
-        """
+class SecretiveModel(models.Model):
+    def __setattr__(self, name, value):
+        result = super(SecretiveModel, self).__setattr__(name, value)
         try:
-            return self.plaintext
-        except AttributeError:
-            if (password and self.salt):
-                # nobody has assigned plaintext yet
-            
-                encoded = self._encode(password, self.salt)
-                [alg, iterations, self.salt, hash] = encoded.split('$')            
+            current = getattr(self, name)
+            if type(current) is Secret:
+                # De-link the obsolete Secret from this model
+                current.destroy_model_reference((self, name))
+        except KeyError:
+            # Django's models actually return a KeyError for a missing attribute,
+            # not an AttributeError
+            pass
 
-                iv = self.ciphertext[0:AES.block_size]
-                cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
-            
-                self.plaintext = cipher.decrypt(self.ciphertext[AES.block_size:])
-                return self.plaintext
+        if type(value) is Secret:
+            # Allow the Secret to keep track of models it belongs to
+            value.create_model_reference((self, name))
+        return result
+
+    def upgrade_secret(self, field_name, plaintext, password):
+        setattr(self, field_name, Secret.from_plaintext(plaintext, password))
+
+        # Save only the affected field to database
+        self.save(update_fields=[field_name])
