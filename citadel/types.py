@@ -4,8 +4,8 @@ from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
 class Secret(object):
     def __init__(self, plaintext=None, password=None, 
-                 ciphertext=None, salt=None, work_factor=None):
-        #self.model_ref = set()
+                 ciphertext=None, salt=None, work_factor=None,
+                 checksum=None):
         self.model_ref = None
         if(plaintext and password):
             # Secret begins life unencrypted, keep it that way
@@ -13,6 +13,8 @@ class Secret(object):
             encoded = self._encode(password)
 
             [alg, iterations, self.salt, hash]  = encoded.split('$')
+
+            [_, _, _, self.checksum] = self._encode(plaintext, self.salt).split('$')
             self.work_factor = int(iterations)
 
             # generate a unique initialization vector
@@ -26,6 +28,7 @@ class Secret(object):
             self.salt = salt
             self.ciphertext = ciphertext
             self.work_factor = int(work_factor)
+            self.checksum = checksum
         else:
             raise ValueError("Insufficient arguments to initialize Secret")
 
@@ -63,16 +66,21 @@ class Secret(object):
         return cls(plaintext=plaintext, password=password)
     
     @classmethod
-    def from_ciphertext(cls, ciphertext, salt, work_factor):
+    def from_ciphertext(cls, ciphertext, salt, work_factor, checksum):
         """
         Generate a Secret object from ciphertext and salt
 
         :param ciphertext: initialization vector + encrypted plaintext
         :param salt: AES salt value
         :param work_factor: PBKDF2 hash work factor
+        :param checksum: PBKDF2 hash checksum of secret
         :return: Secret object (encrypted)
         """
-        return cls(ciphertext=ciphertext, salt=salt, work_factor=work_factor)    
+        print 'checksum: ' + repr(checksum)
+        return cls(ciphertext=ciphertext, 
+                   salt=salt, 
+                   work_factor=work_factor, 
+                   checksum=checksum)
     
     def recrypt(self, old_pw, new_pw):
         """
@@ -115,6 +123,9 @@ class Secret(object):
         """
         return self.ciphertext
         
+    def get_checksum(self):
+        return self.checksum
+
     def get_plaintext(self, password=None):
         """
         Return the secret in plaintext.
@@ -133,25 +144,34 @@ class Secret(object):
                 encoded = self._encode(password, self.salt, self.work_factor)
 
                 # retrieve the pw hash, used as decryption key
-                [alg, iterations, self.salt, hash] = encoded.split('$')            
+                [alg, iterations, self.salt, key] = encoded.split('$')            
 
                 iv = self.ciphertext[0:AES.block_size]
-                cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
+                cipher = AES.new(key[0:32], AES.MODE_CFB, iv)
             
-                self.plaintext = cipher.decrypt(self.ciphertext[AES.block_size:])
+                plaintext = cipher.decrypt(self.ciphertext[AES.block_size:])
+                print 'plaintext: ' +repr(plaintext)
 
-                # if upgrade needed, send signal to Model instances to update their SecretFields
-                if self.work_factor != PBKDF2PasswordHasher.iterations:
-                    (model, field_name) = self.model_ref
-                    model.upgrade_secret(field_name, self.plaintext, password)
+                checksum_encoded = self._encode(plaintext, self.salt, self.work_factor)
+                [_, _, _, checksum] = checksum_encoded.split('$')
 
-                return self.plaintext
+                # self.checksum could be None in legacy cases!
+                if not self.checksum or checksum == self.checksum:
+                    self.plaintext = plaintext
+
+                    # if upgrade needed, send signal to Model instances to update their SecretFields
+                    if self.work_factor != PBKDF2PasswordHasher.iterations:
+                        (model, field_name) = self.model_ref
+                        model.upgrade_secret(field_name, self.plaintext, password)
+
+                    return self.plaintext
+                else:
+                    #@TODO: raise exception here
+                    return None
 
     def create_model_reference(self, (instance, field_name)):
         """Keep track of the Django models to which this Secret belongs."""
-        #self.model_ref.add((instance, field_name))
         self.model_ref = (instance, field_name)
 
     def destroy_model_reference(self, (instance, field_name)):
-        #self.model_ref.delete((instance, field_name))
         self.model_ref = None

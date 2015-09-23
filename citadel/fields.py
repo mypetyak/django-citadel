@@ -1,4 +1,5 @@
 from citadel.types import Secret
+from django.conf import settings
 from django.db import models
 from django.utils.six import with_metaclass
 
@@ -22,12 +23,17 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
             # we need to stringify 'value' in case we're handed
             # a buffer object, as in the case of postgresql
             try:
-                [salt, work_factor, ciphertext] = str(value).split('$')
-                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor)
+                [salt, work_factor, ciphertext, checksum] = str(value).split('$')
+                secret = Secret.from_ciphertext(ciphertext.decode('hex'), 
+                                                salt, 
+                                                work_factor, 
+                                                checksum)
             except ValueError:
                 # maintain support for Citadel versions <= 0.2
                 [salt, ciphertext] = str(value).split('$')
-                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt)
+                work_factor = int(getattr(settings, 'CITADEL_DEFAULT_WF', 20000))
+                
+                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor, checksum=None)
 
             return secret
 
@@ -41,8 +47,9 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
             return None
         ciphertext = value.get_ciphertext().encode('hex')
         salt = value.get_salt()
+        checksum = value.get_checksum()
 
-        prep = str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext)
+        prep = str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext) + '$' + str(checksum)
         return prep
         
     def value_to_string(self, obj): 
