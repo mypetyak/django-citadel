@@ -90,7 +90,7 @@ class Secret(object):
         :return: None
         """
         plaintext = self.get_plaintext(old_pw)
-        encoded = self._encode(new_pw, self.work_factor)
+        encoded = self._encode(new_pw, work_factor=self.work_factor)
 
         [alg, iterations, self.salt, hash]  = encoded.split('$')
         
