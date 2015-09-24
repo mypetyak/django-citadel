@@ -76,7 +76,6 @@ class Secret(object):
         :param checksum: PBKDF2 hash checksum of secret
         :return: Secret object (encrypted)
         """
-        print 'checksum: ' + repr(checksum)
         return cls(ciphertext=ciphertext, 
                    salt=salt, 
                    work_factor=work_factor, 
@@ -150,7 +149,6 @@ class Secret(object):
                 cipher = AES.new(key[0:32], AES.MODE_CFB, iv)
             
                 plaintext = cipher.decrypt(self.ciphertext[AES.block_size:])
-                print 'plaintext: ' +repr(plaintext)
 
                 checksum_encoded = self._encode(plaintext, self.salt, self.work_factor)
                 [_, _, _, checksum] = checksum_encoded.split('$')
