@@ -97,6 +97,8 @@ class Secret(object):
         iv = Random.new().read(AES.block_size)
         cipher = AES.new(hash[0:32], AES.MODE_CFB, iv)
         self.ciphertext = (iv + cipher.encrypt(plaintext))
+        self.work_factor = int(iterations)
+        [_, _, _, self.checksum] = self._encode(plaintext, self.salt, self.work_factor).split('$')
        
     def get_salt(self):
         """
