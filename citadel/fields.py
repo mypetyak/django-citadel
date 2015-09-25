@@ -45,6 +45,11 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         """
         if not value:
             return None
+        elif isinstance(value, basestring):
+            # When loading a fixture, get_prep_value
+            # is executed on a prepared string
+            return value
+
         ciphertext = value.get_ciphertext().encode('hex')
         salt = value.get_salt()
         checksum = value.get_checksum()
