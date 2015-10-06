@@ -11,6 +11,10 @@ except ImportError:
 
 
 class SecretiveModel(models.Model):
+    class Meta:
+        # Don't create a separate db table for this superclass model
+        abstract = True
+
     def __setattr__(self, name, value):
         result = super(SecretiveModel, self).__setattr__(name, value)
         try:
