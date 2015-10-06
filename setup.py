@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup(
     name='django-citadel',
-    version='0.1.4',
+    version='1.0.0',
     description='A Django app that provides an encrypted Model and ModelField',
     author='Christopher Bunn',
     url='https://github.com/mypetyak/django-citadel',
