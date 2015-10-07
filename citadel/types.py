@@ -161,8 +161,12 @@ class Secret(object):
 
                     # if upgrade needed, send signal to Model instances to update their SecretFields
                     if self.work_factor != PBKDF2PasswordHasher.iterations:
-                        (model, field_name) = self.model_ref
-                        model.upgrade_secret(field_name, self.plaintext, password)
+                        try:
+                            (model, field_name) = self.model_ref
+                            model.upgrade_secret(field_name, self.plaintext, password)
+                        except TypeError:
+                            # No model_ref is assigned
+                            pass
 
                     return self.plaintext
                 else:
