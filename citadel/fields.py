@@ -19,21 +19,21 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         if value is None:
             return value
         else:
-            work_factor = None
+            workfactor = None
             # we need to stringify 'value' in case we're handed
             # a buffer object, as in the case of postgresql
             try:
-                [salt, work_factor, ciphertext, checksum] = str(value).split('$')
+                [salt, workfactor, ciphertext, checksum] = str(value).split('$')
                 secret = Secret.from_ciphertext(ciphertext.decode('hex'), 
                                                 salt, 
-                                                work_factor, 
+                                                workfactor, 
                                                 checksum)
             except ValueError:
                 # maintain support for Citadel versions <= 0.2
                 [salt, ciphertext] = str(value).split('$')
-                work_factor = int(getattr(settings, 'CITADEL_DEFAULT_WF', 20000))
+                workfactor = int(getattr(settings, 'CITADEL_DEFAULT_WF', 20000))
                 
-                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt, work_factor, checksum=None)
+                secret = Secret.from_ciphertext(ciphertext.decode('hex'), salt, workfactor, checksum=None)
 
             return secret
 
@@ -54,7 +54,7 @@ class SecretField(with_metaclass(models.SubfieldBase, models.Field)):
         salt = value.get_salt()
         checksum = value.get_checksum()
 
-        prep = str(salt) + '$' + str(value.get_work_factor()) + '$' + str(ciphertext) + '$' + str(checksum)
+        prep = str(salt) + '$' + str(value.get_workfactor()) + '$' + str(ciphertext) + '$' + str(checksum)
         return prep
         
     def value_to_string(self, obj): 

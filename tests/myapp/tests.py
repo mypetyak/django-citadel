@@ -1,6 +1,7 @@
 from citadel.types import Secret
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from myapp.models import BuriedTreasure
 
@@ -42,11 +43,16 @@ class BlackbeardTestCase(TestCase):
                                                password=self.password))
 
         location_pre = bt.location
-        self.assertEqual(location_pre.get_work_factor(), django_wf//2)
+        self.assertEqual(location_pre.get_workfactor(), django_wf//2)
 
         # reset workfactor and retrieve bt from database to simulate a fresh read
         PBKDF2PasswordHasher.iterations = django_wf
         bt = BuriedTreasure.objects.get(pk=bt.pk)
+
+        # confirm a bad password has no affect on workfactor
+        with self.assertRaises(ValidationError):
+            garbage = bt.location.get_plaintext(password='wrong password')
+        self.assertEqual(bt.location.get_workfactor(), django_wf//2)
 
         # now decrypt the secret, and expect it to be automatically upgraded
         jackpot = bt.location.get_plaintext(password=self.password)
@@ -54,4 +60,4 @@ class BlackbeardTestCase(TestCase):
 
         # bt.location should now be upgraded to use current workfactor
         self.assertNotEqual(location_pre, location_post)
-        self.assertEqual(location_post.get_work_factor(), django_wf)
+        self.assertEqual(location_post.get_workfactor(), django_wf)
