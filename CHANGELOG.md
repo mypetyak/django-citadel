@@ -1,4 +1,4 @@
-#1.0.1.dev0 Release Notes
+#1.0.1 Release Notes
 
 ##Incompatabilities:
 Backwards incompatible with Django < 1.8 due to the use of `models.fields.from_db_value()`.  See [Django 1.8 docs](https://docs.djangoproject.com/en/1.8/howto/custom-model-fields/#converting-values-to-python-objects).
