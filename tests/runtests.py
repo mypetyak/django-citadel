@@ -4,10 +4,11 @@ import sys
 
 from django.conf import settings
 
-
-if __name__ == '__main__':
+#if __name__ == '__main__':
+def run_all():
     # Dynamically configure the Django settings with the minimum necessary to
     # get Django running tests.
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     KEY_LOCS = {}
     settings.configure(
         INSTALLED_APPS=[
@@ -16,16 +17,8 @@ if __name__ == '__main__':
             'django.contrib.admin',
             'django.contrib.sessions',
             'citadel',
-            'example',
+            'myapp',
         ],
-        # Django replaces this, but it still wants it. *shrugs*
-        # DATABASE_ENGINE='django.db.backends.sqlite3',
-        # DATABASES={
-        #     'default': {
-        #         'ENGINE': 'django.db.backends.sqlite3',
-        #         'NAME': ':memory:',
-        #     }
-        # },
         DATABASES = {
             'default': {
                 'ENGINE':   'django.db.backends.postgresql_psycopg2',
@@ -47,7 +40,7 @@ if __name__ == '__main__':
         settings.DATABASES['default']['USER'] = 'postgres'
         settings.DATABASES['default']['PASSWORD'] = ''
 
-    apps = ['citadel', 'example']
+    apps = ['citadel', 'myapp']
     from django.core.management import call_command
     from django.test.utils import get_runner
     from django import VERSION

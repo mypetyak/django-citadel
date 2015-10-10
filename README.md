@@ -10,6 +10,7 @@ database-level encryption, such as PostgreSQL's `pgcrypto` module.
 ##Features:
 - Each secret receives a unique salt value and initialization vector
 - Password hashing is performed using PBKDF2 hash function in order to combat dictionary attacks
+- PBKDF2 work factor adjustments, due to Django upgrades, are applied to stored secrets upon the next decryption
 - Hydrated fields remain encrypted in memory until explicitly decrypted, limiting unnecessary performance
 overhead and plaintext leakage
 - Each SecretField can be decrypted individually, providing granular control
@@ -28,9 +29,12 @@ the encryption key is required when the Secret is created. In the following exam
 a BuriedTreasure model is used to protect the location of Blackbeard's loot. 
 
 Example model:
+Each model that uses a SecretField type should inherit from SecretiveModel. This enables automatic upgrading of PBKDF2 hash work factors during Django upgrades.
 
 ```
-class BuriedTreasure(models.Model):
+from citadel.models import SecretiveModel
+
+class BuriedTreasure(SecretiveModel):
     user = models.ForeignKey(User)
     location = SecretField()
 ```
@@ -61,4 +65,6 @@ Printing `jackpot_directions` now outputs the text "30 meters north of the tall 
 The app is available through Pypi:
 `pip install django-citadel`
 
-Add support to your Django project by adding `citadel` to your list of `INSTALLED_APPS`
+Add support to your Django project by adding `citadel` to your list of `INSTALLED_APPS`. 
+
+In installations where Secrets have been stored with legacy versions of `django-citadel`, set a default `CITADEL_DEFAULT_WF` value. See [changelog](https://github.com/mypetyak/django-citadel/blob/feature/workfactor-tracking/CHANGELOG.md#preparing-for-upgrade) for details.
