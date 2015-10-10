@@ -7,6 +7,9 @@ for the Django developer that needs to store sensitive data in an untrusted loca
 be compromised, a third-party external message queue, etc). It is an application-level alternative to
 database-level encryption, such as PostgreSQL's `pgcrypto` module.
 
+##Disclaimer:
+Encryption is hard to get right. For now, `django-citadel` is still a work in progress, and should be treated as such. Please don't deploy this package to highly sensitive data without thorough review of the underlying encryption system by a cryptographic professional. Feedback is, of course, welcome!
+
 ##Features:
 - Each secret receives a unique salt value and initialization vector
 - Password hashing is performed using PBKDF2 hash function in order to combat dictionary attacks
