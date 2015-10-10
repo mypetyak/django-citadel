@@ -1,14 +1,5 @@
 from django.db import models
-from fields import SecretField
 from types import Secret
-
-try:
-    from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], ["^citadel\.fields\.SecretField"])
-except ImportError:
-    # South isn't used
-    pass
-
 
 class SecretiveModel(models.Model):
     class Meta:
@@ -16,6 +7,7 @@ class SecretiveModel(models.Model):
         abstract = True
 
     def __setattr__(self, name, value):
+        """Register self with all Secret attributes."""
         result = super(SecretiveModel, self).__setattr__(name, value)
         try:
             current = getattr(self, name)
@@ -33,6 +25,7 @@ class SecretiveModel(models.Model):
         return result
 
     def upgrade_secret(self, field_name, plaintext, password):
+        """Upgrade the PBKDF2 work factor for a given Secret attribute."""
         setattr(self, field_name, Secret.from_plaintext(plaintext, password))
 
         # Save only the affected field to database
