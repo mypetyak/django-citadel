@@ -70,4 +70,5 @@ The app is available through Pypi:
 
 Add support to your Django project by adding `citadel` to your list of `INSTALLED_APPS`. 
 
-In installations where Secrets have been stored with legacy versions of `django-citadel`, set a default `CITADEL_DEFAULT_WF` value. See [changelog](https://github.com/mypetyak/django-citadel/blob/feature/workfactor-tracking/CHANGELOG.md#preparing-for-upgrade) for details.
+In installations where Secrets have been stored with legacy versions of
+`django-citadel`, set a default `CITADEL_DEFAULT_WF` value. See [changelog](https://github.com/mypetyak/django-citadel/blob/master/CHANGELOG.md#preparing-for-upgrade) for details.
