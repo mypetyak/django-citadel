@@ -1,3 +1,3 @@
-django==1.7.1
+django==1.11.29
 pycrypto==2.6.1
 psycopg2==2.6
